@@ -1,12 +1,66 @@
-# React + Vite
+# Workasana App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack recipe management app where you can create project ,team , task and work on it.  
+Built with a React frontend, Express/Node backend, MongoDB database, and JWT-based authentication.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Demo Link
 
-## Expanding the ESLint configuration
+[Live Demo](https://stunning-figolla-da6116.netlify.app/)  
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## Login
+
+> **Guest**  
+> Username: `test@gmail.com`  
+> Password: `12345678`
+
+---
+
+## Quick Start
+
+```
+git clone https://github.com/lav1706/workasana_Backend.git
+cd main
+npm install
+npm run dev      # or `npm start` / `yarn dev`
+```
+
+## Technologies
+- React JS
+- React Router Dom
+
+
+## Features
+**Dashboard**
+- Displays a list of all project & task
+- Search project by title in real time
+
+**Project**
+- Project wise list of task
+- Filter of Project
+- Add New Task with Project and Team
+
+**Project Details**
+- Edit the Project
+- 
+**Task Details**
+- Edit the Task
+
+**Team**
+- List of teams
+- Edit the members of team
+
+  **Report**
+- Analysies the data and picture it on graph
+- List of Users
+
+**Authentication**
+- User signup and login with JWT
+- Protected routes for adding/editing recipes
+
+
+## Contact
+For bugs or feature requests, please reach out to lavnish.raghav1706@gmail.com
