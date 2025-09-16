@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Pie, Bar } from "react-chartjs-2";
 import {
   Chart,
@@ -9,9 +9,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { useProject } from "../Context/ProjectContext";
-import { useTask } from "../Context/TaskContext";
-import { useAuth } from "../Context/AuthContext";
+import { useSelector, useDispatch } from "react-redux";
+import { getAllUsers } from "../store/features/auth/authSlice.js";
 
 Chart.register(
   ArcElement,
@@ -23,26 +22,22 @@ Chart.register(
 );
 
 const Report = () => {
-  const { projects } = useProject();
-  const { task } = useTask();
-  const { getAllUsers } = useAuth();
+  const { projects } = useSelector((state) => state.projects);
+  const { task } = useSelector((state) => state.tasks);
+  const { users } = useSelector((state) => state.auth);
 
-  const [users, setUsers] = useState([]);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const data = await getAllUsers();
-      setUsers(data);
-    };
-    fetchUsers();
-  }, []);
+    dispatch(getAllUsers());
+  }, [dispatch]);
 
   // Prepare data for the pie chart: tasks per project
   const projectCounts = projects.reduce((acc, proj) => {
     acc[proj.name] = 0;
     return acc;
   }, {});
-  task.forEach((t) => {
+  task?.forEach((t) => {
     const proj = projects.find((p) => p._id === t.project);
     if (proj) projectCounts[proj.name]++;
   });
@@ -52,7 +47,7 @@ const Report = () => {
   // Prepare data for bar chart: tasks per status
   const statusList = ["To Do", "In Progress", "Completed", "Blocked"];
   const statusCounts = statusList.map(
-    (status) => task.filter((t) => t.status === status).length
+    (status) => task?.filter((t) => t.status === status).length
   );
 
   return (

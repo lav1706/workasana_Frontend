@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useTask } from "../Context/TaskContext";
+import { useDispatch, useSelector } from "react-redux";
+import { getTaskById, updateTask } from "../store/features/task/taskSlice";
 
 const TaskDetail = () => {
   const { id } = useParams();
-  const { getTaskById, updateTask } = useTask();
+  const dispatch = useDispatch();
 
-  const [task, setTask] = useState(null);
+  // Redux se data uthana
+  const { selectedTask, loading, error } = useSelector((state) => state.tasks);
+
   const [formData, setFormData] = useState({
     name: "",
     project: "",
@@ -18,62 +21,59 @@ const TaskDetail = () => {
   });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
+  // 🔃 Page load par task fetch
   useEffect(() => {
-    const fetchTask = async () => {
-      if (!id) return;
-      try {
-        const taskData = await getTaskById(id);
-        setTask(taskData);
-        setFormData({
-          name: taskData.name || "",
-          project: taskData.project?._id || "",
-          team: taskData.team?._id || "",
-          status: taskData.status || "To Do",
-          dueDate: taskData.dueDate ? taskData.dueDate.slice(0, 10) : "",
-          timeToComplete: taskData.timeToComplete || 0,
-          priority: taskData.priority || "Low",
-        });
-      } catch (err) {
-        console.error("Failed to fetch task details:", err);
-      }
-    };
-    fetchTask();
-  }, [id]);
+    if (id) {
+      dispatch(getTaskById(id));
+    }
+  }, [id, dispatch]);
 
+  // 🎯 Jab bhi selectedTask update ho → form me bharna
+  useEffect(() => {
+    if (selectedTask) {
+      setFormData({
+        name: selectedTask.name || "",
+        project: selectedTask.project?._id || "",
+        team: selectedTask.team?._id || "",
+        status: selectedTask.status || "To Do",
+        dueDate: selectedTask.dueDate ? selectedTask.dueDate.slice(0, 10) : "",
+        timeToComplete: selectedTask.timeToComplete || 0,
+        priority: selectedTask.priority || "Low",
+      });
+    }
+  }, [selectedTask]);
+
+  // 📝 Input change handler
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async (e) => {
+  // 💾 Save handler
+  const handleSave = (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      await updateTask(id, formData);
-      setIsEditing(false);
+    if (!id) return;
 
-      const updatedTask = await getTaskById(id);
-      setTask(updatedTask);
-      setFormData({
-        name: updatedTask.name || "",
-        project: updatedTask.project?._id || "",
-        team: updatedTask.team?._id || "",
-        status: updatedTask.status || "To Do",
-        dueDate: updatedTask.dueDate ? updatedTask.dueDate.slice(0, 10) : "",
-        timeToComplete: updatedTask.timeToComplete || 0,
-        priority: updatedTask.priority || "Low",
-      });
-    } catch (err) {
-      alert("Failed to update task");
-      console.error(err);
-    }
-    setLoading(false);
+    setSaving(true);
+    dispatch(updateTask({ id, data: formData }))
+      .unwrap()
+      .then(() => {
+        setIsEditing(false);
+      })
+      .catch((err) => {
+        alert("Failed to update task");
+        console.error(err);
+      })
+      .finally(() => setSaving(false));
   };
 
-  if (!task)
-    return <div className="p-6 text-gray-100">Loading task details...</div>;
+  // ⏳ Loading states
+  if (loading) return <div className="p-6 text-gray-100">Loading task...</div>;
+  if (error) return <div className="p-6 text-red-400">Error: {error}</div>;
+  if (!selectedTask)
+    return <div className="p-6 text-gray-100">Task not found</div>;
 
   return (
     <div className="p-6 max-w-3xl mx-auto text-gray-50">
@@ -84,28 +84,31 @@ const TaskDetail = () => {
         ← Back to Tasks
       </Link>
 
-      <h1 className="text-2xl font-bold mb-4">{task.name}</h1>
+      <h1 className="text-2xl font-bold mb-4">{selectedTask.name}</h1>
 
       {!isEditing ? (
         <>
           <p>
-            <strong>Project:</strong> {task.project?.name || "N/A"}
+            <strong>Project:</strong> {selectedTask.project?.name || "N/A"}
           </p>
           <p>
-            <strong>Team:</strong> {task.team?.name || "N/A"}
+            <strong>Team:</strong> {selectedTask.team?.name || "N/A"}
           </p>
           <p>
-            <strong>Status:</strong> {task.status}
+            <strong>Status:</strong> {selectedTask.status}
           </p>
           <p>
             <strong>Due Date:</strong>{" "}
-            {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "N/A"}
+            {selectedTask.dueDate
+              ? new Date(selectedTask.dueDate).toLocaleDateString()
+              : "N/A"}
           </p>
           <p>
-            <strong>Time to Complete (days):</strong> {task.timeToComplete}
+            <strong>Time to Complete (days):</strong>{" "}
+            {selectedTask.timeToComplete}
           </p>
           <p>
-            <strong>Priority:</strong> {task.priority}
+            <strong>Priority:</strong> {selectedTask.priority}
           </p>
 
           <button
@@ -188,17 +191,17 @@ const TaskDetail = () => {
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="px-4 py-2 bg-gray-400 rounded  hover:bg-gray-500"
-              disabled={loading}
+              className="px-4 py-2 bg-gray-400 rounded hover:bg-gray-500"
+              disabled={saving}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-green-600 rounded hover:bg-green-700"
-              disabled={loading}
+              disabled={saving}
             >
-              {loading ? "Saving..." : "Save"}
+              {saving ? "Saving..." : "Save"}
             </button>
           </div>
         </form>

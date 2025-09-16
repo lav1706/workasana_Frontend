@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Card from "../components/Card";
 import AddProjectModal from "../components/AddProjectModel";
-import { useProject } from "../Context/ProjectContext";
+import { fetchProjects } from "../store/features/projects/projectSlice.js";
 import { Link } from "react-router-dom";
 import axiosInstance from "../components/axiosInstance";
+import { useSelector, useDispatch } from "react-redux";
 
 const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
@@ -12,8 +13,13 @@ const Dashboard = () => {
   const [taskFilter, setTaskFilter] = useState("All");
   const [filteredTasks, setFilteredTasks] = useState([]);
 
-  const { projects } = useProject();
+  const dispatch = useDispatch(); // ✅ dispatch hook
+  const { projects, loading, error } = useSelector((state) => state.projects);
 
+  useEffect(() => {
+    dispatch(fetchProjects()); // ✅ project list fetch
+  }, [dispatch]);
+  console.log(projects);
   const filteredProjects = projects
     ?.filter((proj) =>
       proj.name.toLowerCase().includes(searchTerm.toLowerCase())

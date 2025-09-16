@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { useProject } from "../Context/ProjectContext"; // Make sure this path is correct
-import { useAuth } from "../Context/AuthContext";
+import { useDispatch, useSelector } from "react-redux";
+import { createProject } from "../store/features/projects/projectSlice";
 
 const AddProjectModal = ({ show, onClose }) => {
-  const { createProject } = useProject();
-  const { user } = useAuth();
-  const userId = user?.id;
-  console.log(userId);
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const userId = user?._id || user?.id;
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
@@ -14,10 +14,15 @@ const AddProjectModal = ({ show, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await createProject({ name, description });
-    onClose();
-    setName("");
-    setDescription("");
+
+    try {
+      await dispatch(createProject({ name, description, userId })).unwrap(); // ✅ .unwrap() will throw if error
+      setName("");
+      setDescription("");
+      onClose();
+    } catch (err) {
+      console.error("Failed to create project:", err);
+    }
   };
 
   return (
@@ -58,7 +63,6 @@ const AddProjectModal = ({ show, onClose }) => {
             </button>
             <button
               type="submit"
-              onClick={handleSubmit}
               className="px-4 py-2 rounded bg-blue-600 text-white"
             >
               Submit

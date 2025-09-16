@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useProject } from "../Context/ProjectContext";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  getProjectById,
+  updateProject,
+  deleteProject,
+} from "../store/features/projects/projectSlice.js";
 
 const statusOptions = ["To Do", "In Progress", "Completed", "Blocked"];
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const { getProjectById, updateProject, deleteProject, selectedProject } =
-    useProject();
+  const { selectedProject, loading, error } = useSelector(
+    (state) => state.projects
+  );
 
   const [editProjectMode, setEditProjectMode] = useState(false);
   const [editStatusMode, setEditStatusMode] = useState(false);
@@ -20,19 +27,18 @@ const ProjectDetail = () => {
   });
 
   useEffect(() => {
-    const load = async () => {
-      const data = await getProjectById(id);
-      await getProjectById(id);
-      if (data) {
-        setFormData({
-          name: data.name,
-          description: data.description || "",
-          status: data.status || "To Do",
-        });
-      }
-    };
-    load();
-  }, [id]);
+    dispatch(getProjectById(id));
+  }, [dispatch, id]);
+
+  useEffect(() => {
+    if (selectedProject) {
+      setFormData({
+        name: selectedProject.name,
+        description: selectedProject.description || "",
+        status: selectedProject.status || "To Do",
+      });
+    }
+  }, [selectedProject]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,9 +47,7 @@ const ProjectDetail = () => {
 
   const handleSave = async () => {
     try {
-      const res = await updateProject(id, formData);
-      await getProjectById(id);
-      console.log(res);
+      await dispatch(updateProject({ id, formData }));
       setEditProjectMode(false);
       setEditStatusMode(false);
     } catch (err) {
@@ -53,12 +57,14 @@ const ProjectDetail = () => {
 
   const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this project?")) {
-      await deleteProject(id);
+      await dispatch(deleteProject(id));
       navigate("/project");
     }
   };
 
-  if (!selectedProject) return <div className="text-white">Loading...</div>;
+  if (loading) return <div className="text-white">Loading...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
+  if (!selectedProject) return null;
 
   return (
     <div className="p-6 max-w-3xl mx-auto">

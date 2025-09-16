@@ -1,26 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../Context/AuthContext";
-import { useTeam } from "../Context/TeamContext";
-
+import { useSelector, useDispatch } from "react-redux";
+import { createTeam } from "../store/features/team/teamSlice.js";
 const AddTeamModal = ({ show, onClose }) => {
   const [teamName, setTeamName] = useState("");
+  const dispatch = useDispatch();
   const [selectedMembers, setSelectedMembers] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
 
-  const { getAllUsers } = useAuth();
-  const { createTeam } = useTeam();
+  const { users } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (show) {
-      const fetchUsers = async () => {
-        try {
-          const users = await getAllUsers();
-          setAllUsers(users);
-        } catch (err) {
-          console.error("Failed to fetch users", err);
-        }
-      };
-      fetchUsers();
+    if (!show) {
+      setTeamName("");
+      setSelectedMembers([]);
     }
   }, [show]);
 
@@ -28,7 +19,7 @@ const AddTeamModal = ({ show, onClose }) => {
     e.preventDefault();
     try {
       const data = { name: teamName, member: selectedMembers };
-      await createTeam(data);
+      await dispatch(createTeam(data));
       onClose();
     } catch (err) {
       console.error("Failed to create team:", err);
@@ -40,7 +31,6 @@ const AddTeamModal = ({ show, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-xl shadow-lg w-[90%] max-w-md relative">
-        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Create New Team</h2>
           <button
@@ -51,9 +41,7 @@ const AddTeamModal = ({ show, onClose }) => {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
-          {/* Team Name */}
           <div className="mb-4">
             <label className="block text-sm font-medium">Team Name</label>
             <input
@@ -66,11 +54,11 @@ const AddTeamModal = ({ show, onClose }) => {
             />
           </div>
 
-          {/* Add Members */}
           <div className="mb-4">
             <label className="block text-sm font-medium">Add Members</label>
             <select
               multiple
+              size={5}
               value={selectedMembers}
               onChange={(e) =>
                 setSelectedMembers(
@@ -79,14 +67,14 @@ const AddTeamModal = ({ show, onClose }) => {
               }
               className="w-full border border-gray-300 rounded px-3 py-2"
             >
-              {allUsers.map((user) => (
+              {users.map((user) => (
                 <option key={user._id} value={user._id}>
                   {user.name}
                 </option>
               ))}
             </select>
           </div>
-          {/* Action Buttons */}
+
           <div className="flex justify-end gap-2 mt-4">
             <button
               type="button"

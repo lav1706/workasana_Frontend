@@ -1,23 +1,28 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../Context/AuthContext";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../store/features/auth/authSlice";
 
 const Login = () => {
-  const { login } = useAuth();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
-  const [error, setError] = useState("");
+
+  const { user, loading, error, token } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      setError("");
-      await login({ email, password });
-    } catch (err) {
-      setError("Invalid email or password", err);
-    }
+    dispatch(login({ email, password }));
   };
+
+  useEffect(() => {
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [token, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
@@ -33,6 +38,7 @@ const Login = () => {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* error message from redux */}
           {error && (
             <div className="text-red-500 text-sm text-center">{error}</div>
           )}
@@ -75,9 +81,10 @@ const Login = () => {
 
           <button
             type="submit"
+            disabled={loading}
             className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition"
           >
-            Sign in
+            {loading ? "Signing in..." : "Sign in"}
           </button>
 
           <p className="flex items-center justify-center text-sm">

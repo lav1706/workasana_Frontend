@@ -5,11 +5,13 @@ import { MdOutlineSpaceDashboard } from "react-icons/md";
 import { AiOutlineTeam } from "react-icons/ai";
 import { IoLogInOutline, IoLogOutOutline } from "react-icons/io5";
 import { TbReportSearch } from "react-icons/tb";
-import { useAuth } from "../Context/AuthContext"; // adjust path as needed
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../store/features/auth/authSlice";
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
 
   const sideLink = [
     {
@@ -39,8 +41,8 @@ const Sidebar = () => {
   ];
 
   const handleLogout = () => {
-    logout(); // clears token & resets auth
-    navigate("/login"); // navigate to login after logout
+    dispatch(logout());
+    navigate("/login");
   };
 
   return (

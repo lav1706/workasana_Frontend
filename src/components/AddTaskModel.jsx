@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useTeam } from "../Context/TeamContext";
-import { useProject } from "../Context/ProjectContext";
-import { useTask } from "../Context/TaskContext";
-import { useAuth } from "../Context/AuthContext";
+import { useDispatch, useSelector } from "react-redux";
+import { createTask } from "../store/features/task/taskSlice.js";
 
 const AddTaskModal = ({ show, onClose }) => {
-  const { createTask } = useTask();
-  const { team } = useTeam();
-  const { projects } = useProject();
-  const { user } = useAuth();
+  const dispatch = useDispatch();
+  const { projects, loading, error } = useSelector((state) => state.projects);
+  const { team } = useSelector((state) => state.teams);
+  const { user } = useSelector((state) => state.auth);
 
   const [taskName, setTaskName] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
@@ -45,7 +43,7 @@ const AddTaskModal = ({ show, onClose }) => {
     console.log(user);
     console.log("Submitting task:", newTask);
     try {
-      await createTask(newTask);
+      await dispatch(createTask(newTask));
       onClose();
     } catch (err) {
       alert("Failed to create task. Check all fields.");

@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../Context/AuthContext";
+import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
-import { useTeam } from "../Context/TeamContext";
+import {
+  getTeamById,
+  addMemberToTeam,
+} from "../store/features/team/teamSlice.js";
+import { getAllUsers } from "../store/features/auth/authSlice.js";
 
 const AddSingleTeamModal = ({ show, onClose }) => {
+  const dispatch = useDispatch();
   const [selectedUserId, setSelectedUserId] = useState("");
   const [availableUsers, setAvailableUsers] = useState([]);
-  const { getAllUsers } = useAuth();
-  const { getTeamById, addMemberToTeam } = useTeam();
   const { id } = useParams();
+
   const fetchUsers = async () => {
     try {
-      const users = await getAllUsers();
-      const team = await getTeamById(id);
+      const users = await dispatch(getAllUsers()).unwrap();
+      const team = await dispatch(getTeamById(id)).unwrap();
 
       if (team) {
         const memberIds = team.member.map((m) =>
@@ -22,7 +26,6 @@ const AddSingleTeamModal = ({ show, onClose }) => {
           (user) => !memberIds.includes(user._id)
         );
         setAvailableUsers(filteredUsers);
-        console.log("Filtered users:", filteredUsers);
       } else {
         setAvailableUsers(users);
       }
@@ -30,18 +33,25 @@ const AddSingleTeamModal = ({ show, onClose }) => {
       console.error("Failed to load users:", err);
     }
   };
+
   useEffect(() => {
     if (show) {
       fetchUsers();
     }
   }, [show, id]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (selectedUserId) {
-      addMemberToTeam(id, selectedUserId);
-      setSelectedUserId("");
-      onClose();
+      try {
+        await dispatch(
+          addMemberToTeam({ id, userId: selectedUserId })
+        ).unwrap();
+        setSelectedUserId("");
+        onClose();
+      } catch (err) {
+        console.error("Failed to add member:", err);
+      }
     }
   };
 

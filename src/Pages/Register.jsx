@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../Context/AuthContext";
+import { useDispatch } from "react-redux";
+import { register } from "../store/features/auth/authSlice";
 
 const Register = () => {
-  const { register } = useAuth(); // 👈 use register from context
-
+  const dispatch = useDispatch();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,10 +18,17 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register({ name, email, password }); // 🔐 trigger context function
+      const result = await dispatch(register({ name, email, password }));
+
+      if (register.fulfilled.match(result)) {
+        console.log("Registration success:", result.payload);
+      } else {
+        console.error("Registration failed:", result.payload);
+        setError(result.payload?.message || "Registration failed");
+      }
     } catch (err) {
-      console.error("Registration failed:", err);
-      setError(err.response?.data?.message || "Registration failed");
+      console.error("Unexpected error:", err);
+      setError("Something went wrong");
     } finally {
       setLoading(false);
     }
